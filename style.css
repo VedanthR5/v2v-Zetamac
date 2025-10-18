@@ -76,6 +76,7 @@ h1, h2, h3 {
     display: flex;
     flex-direction: column;
     padding: 2rem 3rem;
+    padding-top: 4rem;
 }
 .game-header {
     display: flex;
@@ -95,7 +96,7 @@ h1, h2, h3 {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 1rem;
+    margin-top: 4rem;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Optional: subtle shadow for depth */
 }
 #answer-input, #practice-answer-input {
