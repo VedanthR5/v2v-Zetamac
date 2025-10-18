@@ -1,6 +1,15 @@
 # V2V Zetamac Buffed: An Enhanced Arithmetic Practice Game 🧠
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://vedanthr5.github.io/ZetamacV2V/)
+[![GitHub Pages](https://img.shields.io/badge/Deployed_on-GitHub_Pages-success?style=for-the-badge&logo=github)](https://vedanthr5.github.io/ZetamacV2V/)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
 ![V2V Zetamac Buffed](image.png)
+
+> **[Try it live now!](https://vedanthr5.github.io/ZetamacV2V/)**
 
 V2V Zetamac Buffed is a web-based arithmetic game inspired by the classic Zetamac speed drill. While the original is excellent for raw practice, it lacks feedback for targeted improvement. This version "buffs" the experience by adding a comprehensive post-game analysis dashboard to help you identify and work on your specific weaknesses.
 
@@ -37,27 +46,21 @@ This is a simple, static web application with no backend or build steps required
 
 1. Clone this repository to your local machine:
    ```bash
-   git clone https://github.com/your-username/v2v-zetamac-buffed.git
+   git clone https://github.com/vedanthr5/ZetamacV2V.git
    ```
 2. Navigate to the project directory:
    ```bash
-   cd v2v-zetamac-buffed
+   cd ZetamacV2V
    ```
 3. Open the `index.html` file in any modern web browser.
 
 That's it! No installation, no dependencies, no build process.
 
-### Live Demo via GitHub Pages
+### Live Demo
 
-This project can be easily deployed for free using GitHub Pages:
+** Play now at: [https://vedanthr5.github.io/ZetamacV2V/](https://vedanthr5.github.io/ZetamacV2V/)**
 
-1. Push your code to a GitHub repository.
-2. In the repository, go to **Settings > Pages**.
-3. Under "Branch," select `main` and `/root`, then click **Save**.
-4. Wait a minute for it to build, and your live site will be available at:
-   ```
-   https://your-username.github.io/v2v-zetamac-buffed/
-   ```
+This project is deployed on GitHub Pages for instant access - no setup required!
 
 ---
 
