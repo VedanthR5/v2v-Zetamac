@@ -3,19 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>v2v's zetamac</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Zetamac Buffed Trainer - Advanced Mental Math Practice</title>
+    <meta name="title" content="Zetamac Buffed Trainer - Advanced Mental Math Practice" />
+    <meta name="description" content="A fast-paced arithmetic speed drill and mental math trainer. Customize your practice with advanced analysis, problem ranges, and performance tracking. The ultimate Zetamac alternative." />
+    <meta name="keywords" content="zetamac, mental math, arithmetic, speed math, math trainer, brain training, calculation practice, quant interview prep" />
+    <meta name="author" content="VedanthR5" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://vedanthr5.github.io/v2v-Zetamac/" />
+    <meta property="og:title" content="Zetamac Buffed Trainer - Advanced Mental Math Practice" />
+    <meta property="og:description" content="A fast-paced arithmetic speed drill and mental math trainer. Customize your practice with advanced analysis, problem ranges, and performance tracking." />
+    <meta property="og:image" content="https://vedanthr5.github.io/v2v-Zetamac/favicon.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://vedanthr5.github.io/v2v-Zetamac/" />
+    <meta property="twitter:title" content="Zetamac Buffed Trainer - Advanced Mental Math Practice" />
+    <meta property="twitter:description" content="A fast-paced arithmetic speed drill and mental math trainer. Customize your practice with advanced analysis, problem ranges, and performance tracking." />
+    <meta property="twitter:image" content="https://vedanthr5.github.io/v2v-Zetamac/favicon.png" />
+
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://vedanthr5.github.io/v2v-Zetamac/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="favicon.png" />
+
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="container">
-      <div id="settings-view">
-        <div class="welcome-header">
-          <h1>Welcome to v2v's zetamac</h1>
-          <p class="tagline">A New Era of Learning</p>
-        </div>
+    <main class="container">
+      <section id="settings-view">
+        <header class="welcome-header">
+          <h1>Arithmetic Game</h1>
+          <p class="tagline">Buffed Trainer Edition</p>
+        </header>
         <p>
           This is a fast-paced speed drill where you are given a set time to
-          solve as many arithmetic problems as you can.
+          solve as many arithmetic problems as you can. Additionaly, you can
+          practice solving problems on your own based on custom analysis of your
+          performance.
         </p>
 
         <div class="settings-form">
@@ -64,22 +94,43 @@
             <option value="300">300 seconds</option>
             <option value="600">600 seconds</option>
           </select>
+
+          <div style="margin-top: 1rem">
+            <label for="target-score" style="font-weight: bold"
+              >Target Score:</label
+            >
+            <input
+              type="number"
+              id="target-score"
+              value="60"
+              style="
+                width: 60px;
+                text-align: center;
+                font-size: 1rem;
+                padding: 4px;
+              "
+            />
+            <span style="font-size: 0.9rem; color: #666"
+              >(Leave 0 to disable)</span
+            >
+          </div>
         </div>
         <button id="start-btn">Start</button>
-      </div>
+      </section>
 
-      <div id="game-view" class="hidden">
+      <section id="game-view" class="hidden">
         <div class="game-header">
-          <span id="timer">Time left: 120</span>
+          <span id="timer">Time: 120</span>
+          <span id="pace-tracker" class="hidden">--</span>
           <span id="score">Score: 0</span>
         </div>
         <div class="problem-area">
           <span id="problem-text"></span>
           <input type="text" id="answer-input" autocomplete="off" autofocus />
         </div>
-      </div>
+      </section>
 
-      <div id="results-view" class="hidden">
+      <section id="results-view" class="hidden">
         <div class="stats-container">
           <div class="stat-card">
             <span class="stat-label">Final Score</span>
@@ -90,7 +141,13 @@
             <span class="stat-value" id="total-time-val">0s</span>
           </div>
           <div class="stat-card">
-            <span class="stat-label">Avg. per Question</span>
+            <span class="stat-label">Target Pace</span>
+            <span class="stat-value" id="target-pace-val" style="color: #666"
+              >--</span
+            >
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Actual Avg</span>
             <span class="stat-value avg-time-value" id="avg-time-val"
               >0.00s</span
             >
@@ -108,23 +165,22 @@
           <table id="analysis-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Problem</th>
-                <th>Time (s)</th>
-                <th>Attempts</th>
+                <th class="sortable" data-sort="index">#</th>
+                <th class="sortable" data-sort="problem">Problem</th>
+                <th class="sortable" data-sort="time">Time (s)</th>
+                <th class="sortable" data-sort="attempts">Attempts</th>
                 <th>Your Tries</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-
         <div class="problem-area" id="practice-problem-area">
           <span id="practice-problem-text"></span>
           <input type="text" id="practice-answer-input" autocomplete="off" />
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
     <script src="script.js"></script>
   </body>
 </html>

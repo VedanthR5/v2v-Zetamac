@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://vedanthr5.github.io/v2v-Zetamac/sitemap.xml

@@ -11,11 +11,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const scoreDisplay = document.getElementById("score");
   const problemText = document.getElementById("problem-text");
   const answerInput = document.getElementById("answer-input");
+  const paceDisplay = document.getElementById("pace-tracker");
 
   // Results View Elements
   const finalScoreVal = document.getElementById("final-score-val");
   const totalTimeVal = document.getElementById("total-time-val");
   const avgTimeVal = document.getElementById("avg-time-val");
+  const targetPaceVal = document.getElementById("target-pace-val"); // NEW
   const tryAgainBtn = document.getElementById("try-again-btn");
   const changeSettingsBtn = document.getElementById("change-settings-btn");
   const analysisTableBody = document.querySelector("#analysis-table tbody");
@@ -26,15 +28,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Game State
   let gameSettings = {};
   let score = 0;
-  let timeLeft = 0;
   let timerInterval = null;
   let currentProblem = null;
   let problemHistory = [];
   let questionStartTime = 0;
   let currentAttempts = [];
 
-  // NEW: State for endless practice mode
+  // Timing State
+  let gameStartTime = 0;
+  let gameDuration = 0;
+
+  // Endless practice mode
   let practiceCategory = null;
+
+  // Sorting State
+  let currentSort = { key: "index", direction: "asc" };
 
   const showView = (viewName) => {
     Object.values(views).forEach((view) => view.classList.add("hidden"));
@@ -63,12 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
     },
     duration: parseInt(document.getElementById("duration").value),
+    targetScore: parseInt(document.getElementById("target-score").value) || 0,
   });
 
   const getRandomInt = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
 
-  // MODIFIED: Can now be forced to generate a problem from a specific category
   const generateProblem = (forcedCategory = null) => {
     const enabledOps = Object.keys(gameSettings.ops).filter(
       (op) => gameSettings.ops[op]
@@ -138,7 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const nextProblem = () => {
-    // MODIFIED: Handles both game and practice modes
     currentProblem = generateProblem(practiceCategory);
     currentAttempts = [];
     questionStartTime = Date.now();
@@ -161,7 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
     currentAttempts.push(userAnswer);
 
     if (parseInt(userAnswer) === currentProblem.answer) {
-      // MODIFIED: Only update score and history if not in practice mode
       if (!practiceCategory) {
         score++;
         scoreDisplay.textContent = `Score: ${score}`;
@@ -171,8 +177,12 @@ document.addEventListener("DOMContentLoaded", () => {
           answer: currentProblem.answer,
           type: currentProblem.type,
           time: timeTaken,
+
           attempts: [...currentAttempts],
+          originalIndex: problemHistory.length + 1, // Store original index
         });
+
+        updateTimerAndPace();
       }
       nextProblem();
     }
@@ -181,60 +191,117 @@ document.addEventListener("DOMContentLoaded", () => {
   const startGame = () => {
     gameSettings = getSettingsFromForm();
     score = 0;
-    timeLeft = gameSettings.duration;
+    gameDuration = gameSettings.duration;
     problemHistory = [];
-    practiceCategory = null; // NEW: Reset practice mode on new game
+    practiceCategory = null;
 
     scoreDisplay.textContent = `Score: 0`;
-    timerDisplay.textContent = `Time left: ${timeLeft}`;
+    timerDisplay.textContent = `Time: ${gameDuration}`;
+    timerDisplay.classList.remove("timer-goal-met"); // Reset visual style
+
+    // Setup Pace Display
+    if (gameSettings.targetScore > 0) {
+      paceDisplay.classList.remove("hidden");
+      paceDisplay.textContent = "±0.0";
+      paceDisplay.className = "pace-neutral";
+    } else {
+      paceDisplay.classList.add("hidden");
+    }
+
     showView("game");
     nextProblem();
 
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      timerDisplay.textContent = `Time left: ${timeLeft}`;
-      if (timeLeft <= 0) {
-        endGame();
+    gameStartTime = Date.now();
+    timerInterval = setInterval(updateTimerAndPace, 100);
+  };
+
+  const updateTimerAndPace = () => {
+    const now = Date.now();
+    const elapsedTime = (now - gameStartTime) / 1000;
+    const timeLeft = Math.ceil(gameDuration - elapsedTime);
+
+    // 1. Timer Logic: Always show the countdown
+    timerDisplay.textContent = `Time: ${Math.max(0, timeLeft)}`;
+    timerDisplay.classList.remove("timer-goal-met"); // Remove the old green style from timer
+
+    // 2. Pace Tracker Logic
+    if (gameSettings.targetScore > 0) {
+      if (score >= gameSettings.targetScore) {
+        // GOAL MET LOGIC: Override the pace tracker, not the timer
+        paceDisplay.textContent = "GOAL MET!";
+
+        // Force green styling
+        paceDisplay.className = ""; // Reset classes
+        paceDisplay.classList.add("pace-ahead");
+
+        // Optional: Make it pop a bit more
+        paceDisplay.style.fontWeight = "900";
+        paceDisplay.style.fontSize = "1.6rem";
+      } else {
+        // STANDARD PACE LOGIC
+        const targetPacePerQuestion = gameDuration / gameSettings.targetScore;
+        const expectedTimeForScore = score * targetPacePerQuestion;
+        const diff = elapsedTime - expectedTimeForScore;
+
+        const sign = diff > 0 ? "+" : "";
+        paceDisplay.textContent = `${sign}${diff.toFixed(1)}`;
+
+        // Reset styles for normal tracking
+        paceDisplay.style.fontWeight = "";
+        paceDisplay.style.fontSize = "";
+        paceDisplay.classList.remove(
+          "pace-ahead",
+          "pace-behind",
+          "pace-neutral"
+        );
+
+        if (diff <= 0) {
+          paceDisplay.classList.add("pace-ahead"); // Green
+        } else {
+          paceDisplay.classList.add("pace-behind"); // Red
+        }
       }
-    }, 1000);
+    }
+
+    if (elapsedTime >= gameDuration) {
+      endGame();
+    }
   };
 
   const endGame = () => {
     clearInterval(timerInterval);
     showView("results");
     displayAnalysis();
-    nextProblem(); // Kick off the first practice problem
+    nextProblem();
   };
 
   const displayAnalysis = () => {
-    // NEW: Populate stat cards
     const answeredCount = problemHistory.length;
-    const avgTime =
-      answeredCount > 0 ? gameSettings.duration / answeredCount : 0;
+    const avgTime = answeredCount > 0 ? gameDuration / answeredCount : 0;
+
+    // NEW: Calculate Target Pace
+    let targetPace = 0;
+    if (gameSettings.targetScore > 0) {
+      targetPace = gameDuration / gameSettings.targetScore;
+      targetPaceVal.textContent = `${targetPace.toFixed(2)}s`;
+    } else {
+      targetPaceVal.textContent = "--";
+    }
 
     finalScoreVal.textContent = score;
-    totalTimeVal.textContent = `${gameSettings.duration}s`;
+    totalTimeVal.textContent = `${gameDuration}s`;
     avgTimeVal.textContent = `${avgTime.toFixed(2)}s`;
 
     analysisTableBody.innerHTML = "";
     if (answeredCount === 0) {
       analysisSummary.innerHTML =
         "You didn't answer any questions correctly. Try again!";
-      practiceCategory = null; // No data to base practice on
+      practiceCategory = null;
       return;
     }
 
-    problemHistory.forEach((p, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td>${index + 1}</td><td>${p.problem} <strong>${
-        p.answer
-      }</strong></td><td>${p.time.toFixed(2)}</td><td>${
-        p.attempts.length
-      }</td><td>${p.attempts.join(", ")}</td>`;
-      analysisTableBody.appendChild(row);
-    });
-
-    // Calculate summary stats
+    // Initial render with default sort (index)
+    // Calculate stats and set practice category
     const slowestProblem = problemHistory.reduce(
       (max, p) => (p.time > max.time ? p : max),
       problemHistory[0]
@@ -259,102 +326,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
     analysisSummary.innerHTML = `You answered <strong>${answeredCount}</strong> questions correctly.<br> Your slowest category was <span class="highlight">${slowestCategory.toUpperCase()}</span>. Now entering practice mode for this category.`;
 
-    // NEW: Set the category for endless practice mode
     practiceCategory = slowestCategory;
+
+    renderAnalysisTable();
   };
 
-  // Table Sorting Functionality
-  let currentSortColumn = null;
-  let currentSortDirection = "asc";
+  const renderAnalysisTable = () => {
+    // Sort data
+    const sortedHistory = [...problemHistory].sort((a, b) => {
+      let valA = a[currentSort.key];
+      let valB = b[currentSort.key];
 
-  const sortTable = (columnIndex, dataType) => {
-    // Toggle direction if clicking the same column
-    if (currentSortColumn === columnIndex) {
-      currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
-    } else {
-      currentSortColumn = columnIndex;
-      currentSortDirection = "asc";
-    }
-
-    // Create a copy of problemHistory with indices
-    const sortedData = problemHistory.map((p, index) => ({
-      ...p,
-      originalIndex: index + 1,
-    }));
-
-    // Sort based on column
-    sortedData.sort((a, b) => {
-      let valA, valB;
-
-      if (columnIndex === 2) {
-        // Time column
-        valA = a.time;
-        valB = b.time;
-      } else if (columnIndex === 3) {
-        // Attempts column
+      // Handle special cases
+      if (currentSort.key === "index") {
+        valA = a.originalIndex;
+        valB = b.originalIndex;
+      } else if (currentSort.key === "attempts") {
         valA = a.attempts.length;
         valB = b.attempts.length;
       }
 
-      if (currentSortDirection === "asc") {
-        return valA - valB;
-      } else {
-        return valB - valA;
-      }
+      if (valA < valB) return currentSort.direction === "asc" ? -1 : 1;
+      if (valA > valB) return currentSort.direction === "asc" ? 1 : -1;
+      return 0;
     });
 
-    // Re-render the table
+    // Calculate Target Pace for highlighting
+    let targetPace = 0;
+    if (gameSettings.targetScore > 0) {
+      targetPace = gameDuration / gameSettings.targetScore;
+    }
+
     analysisTableBody.innerHTML = "";
-    sortedData.forEach((p) => {
+    sortedHistory.forEach((p) => {
       const row = document.createElement("tr");
-      row.innerHTML = `<td>${p.originalIndex}</td><td>${p.problem} <strong>${
-        p.answer
-      }</strong></td><td>${p.time.toFixed(2)}</td><td>${
-        p.attempts.length
-      }</td><td>${p.attempts.join(", ")}</td>`;
+
+      // Color coding logic
+      let timeClass = "";
+      if (targetPace > 0) {
+        if (p.time <= targetPace) {
+          timeClass = "time-success"; // Green (Faster than target pace)
+        } else {
+          timeClass = "time-fail"; // Red (Slower than target pace)
+        }
+      }
+
+      row.innerHTML = `
+        <td>${p.originalIndex}</td>
+        <td>${p.problem} <strong>${p.answer}</strong></td>
+        <td class="${timeClass}">${p.time.toFixed(2)}</td>
+        <td>${p.attempts.length}</td>
+        <td>${p.attempts.join(", ")}</td>
+      `;
       analysisTableBody.appendChild(row);
     });
 
-    // Update header indicators
-    updateSortIndicators(columnIndex);
-  };
-
-  const updateSortIndicators = (activeColumn) => {
-    const headers = document.querySelectorAll("#analysis-table th");
-    headers.forEach((header, index) => {
-      // Remove existing indicators
-      header.classList.remove("sort-asc", "sort-desc", "sortable");
-      const existingArrow = header.querySelector(".sort-arrow");
-      if (existingArrow) existingArrow.remove();
-
-      // Add sortable class to Time and Attempts columns
-      if (index === 2 || index === 3) {
-        header.classList.add("sortable");
-        header.style.cursor = "pointer";
-
-        if (index === activeColumn) {
-          const arrow = document.createElement("span");
-          arrow.className = "sort-arrow";
-          arrow.textContent = currentSortDirection === "asc" ? " ▲" : " ▼";
-          header.appendChild(arrow);
-          header.classList.add(
-            currentSortDirection === "asc" ? "sort-asc" : "sort-desc"
-          );
-        }
+    // Update header sort indicators
+    document.querySelectorAll("#analysis-table th.sortable").forEach((th) => {
+      th.classList.remove("sort-asc", "sort-desc");
+      if (th.dataset.sort === currentSort.key) {
+        th.classList.add(currentSort.direction === "asc" ? "sort-asc" : "sort-desc");
       }
     });
   };
 
-  const initTableSorting = () => {
-    const headers = document.querySelectorAll("#analysis-table th");
-    headers.forEach((header, index) => {
-      if (index === 2 || index === 3) {
-        // Time and Attempts columns
-        header.addEventListener("click", () => sortTable(index, "number"));
-        header.style.cursor = "pointer";
-        header.classList.add("sortable");
-      }
-    });
+  const handleSort = (key) => {
+    if (currentSort.key === key) {
+      currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+    } else {
+      currentSort.key = key;
+      currentSort.direction = "asc"; // Default to asc for new key
+    }
+    renderAnalysisTable();
+
   };
 
   // Event Listeners
@@ -362,12 +406,16 @@ document.addEventListener("DOMContentLoaded", () => {
   answerInput.addEventListener("input", () => checkAnswer(answerInput));
   practiceAnswerInput.addEventListener("input", () =>
     checkAnswer(practiceAnswerInput)
-  ); // NEW
+  );
   tryAgainBtn.addEventListener("click", startGame);
   changeSettingsBtn.addEventListener("click", () => showView("settings"));
 
-  // Initialize table sorting
-  initTableSorting();
+  // Sort Event Listeners
+  document.querySelectorAll("#analysis-table th.sortable").forEach((th) => {
+    th.addEventListener("click", () => {
+      handleSort(th.dataset.sort);
+    });
+  });
 
   showView("settings");
 });
